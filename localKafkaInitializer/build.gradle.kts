@@ -7,10 +7,12 @@ plugins {
 }
 application {
     // Define the main class for the application.
-    mainClass.set("mn.tqt.local_kafka_initializer.KafkaInitializerKT")
+    mainClass.set("mn.tqt.local_kafka_initializer.Main")
 }
 
 dependencies {
     implementation(libs.jackson)
     implementation(libs.kafkaclients)
+    implementation(libs.kafkajson)
+    implementation(libs.webstarter)
 }

@@ -18,6 +18,8 @@ dependencyResolutionManagement {
         create("libs") {
             library("kafkaclients", "org.apache.kafka:kafka-clients:3.6.1")
             library("jackson", "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.0")
+            library("webstarter", "org.springframework.boot:spring-boot-starter-web:3.2.0")
+            library("kafkajson", "io.confluent:kafka-json-schema-serializer:7.5.0")
         }
     }
 }

@@ -6,7 +6,18 @@ POST http://localhost:8080
 Content-Type: application/json
 
 {
-  "query": "aaaa"
+  "startDate": "2023-12-16",
+  "endDate": "2023-12-18",
+  "kafkaEndpoint": "localhost:9094",
+  "kafkaTopic": "my-topic",
+  "schemaRegistry": "localhost:9091",
+  "schema": {
+    "type": "EXCLUDE",
+    "schema": [
+      "a.b.c",
+      "a.d"
+    ]
+  }
 }
 
 ###

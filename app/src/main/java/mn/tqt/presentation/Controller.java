@@ -2,11 +2,13 @@ package mn.tqt.presentation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import mn.tqt.presentation.dummy.KafkaReader;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,18 +23,13 @@ public class Controller {
     public java.util.List<ObjectNode> readFromKafka(@RequestBody Query query) throws InterruptedException {
         var consumer = buildConsumer(query.kafkaEndpoint(), query.kafkaTopic(), query.schemaRegistry());
 
-        var nextBatch = consumer.poll(java.time.Duration.ofSeconds(5));
-        var acc = new java.util.ArrayList<ObjectNode>();
+        var reader = new KafkaReader<>(
+                consumer,
+                query.kafkaTopic(),
+                query.typedStartDate().toInstant().toEpochMilli(),
+                query.typedEndDate().toInstant().toEpochMilli());
 
-        while (!nextBatch.isEmpty()) {
-            for (var record : nextBatch.records(query.kafkaTopic())) {
-                var x = record.value();
-                acc.add((ObjectNode) record.value());
-            }
-            nextBatch = consumer.poll(java.time.Duration.ofMillis(100));
-        }
-        consumer.close();
-        return acc;
+        return reader.readRecords().stream().map(record -> (ObjectNode) record.value()).toList();
     }
 
     private KafkaConsumer<Integer, JsonNode> buildConsumer(
@@ -59,6 +56,7 @@ public class Controller {
     }
 
     @GetMapping("/generate-dummy-data")
+//    @Async
     public void setupDummyTopic() throws InterruptedException {
         var props = new java.util.Properties();
 
@@ -80,6 +78,8 @@ public class Controller {
             Thread.sleep(2);
             producer.send(record);
         }
+
+        producer.close();
 
     }
 

@@ -6,8 +6,8 @@ POST http://localhost:8080
 Content-Type: application/json
 
 {
-  "startDate": "2023-12-18",
-  "endDate": "2023-12-19",
+  "startDate": "2023-12-19",
+  "endDate": "2023-12-20",
   "kafkaEndpoint": "localhost:9094",
   "kafkaTopic": "my-topic",
   "schemaRegistry": "localhost:9091",

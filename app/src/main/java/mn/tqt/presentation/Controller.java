@@ -46,6 +46,7 @@ public class Controller {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "10");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         props.put("json.value.type", "com.fasterxml.jackson.databind.JsonNode");
         props.put("schema.registry.url", schemaRegistry);
 

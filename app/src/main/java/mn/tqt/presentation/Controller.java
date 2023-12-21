@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import mn.tqt.presentation.dummy.KafkaReader;
+import org.apache.commons.collections.comparators.ReverseComparator;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -35,15 +36,38 @@ public class Controller {
 
         ArrayList<ConsumerRecord<Integer, JsonNode>> consumerRecords = reader.readRecords();
         return consumerRecords.stream().map(record -> (ObjectNode) record.value())
-                .map(json -> applySchema(json, query.schemaAsListOfQueues())).toList();
+                .map(json -> applySchema(json, query)).toList();
     }
 
-    private ObjectNode applySchema(ObjectNode json, List<LinkedList<String>> linkedLists) {
-        List<JsonPointer> excludePointers = constructExcludePointers(json.deepCopy(), linkedLists);
+    private ObjectNode applySchema(ObjectNode json, Query query) {
+
+        var pointers = new ArrayList<JsonPointer>();
+        switch (query.schema().type()) {
+            case EXCLUDE -> pointers.addAll(constructSchemaPointers(json.deepCopy(), query.schemaAsListOfQueues()));
+            case INCLUDE -> {
+                List<JsonPointer> schemaPointers =
+                        constructSchemaPointers(json.deepCopy(), query.schemaAsListOfQueues());
+                List<JsonPointer> allPointers = constructAllJsonPointers(json,
+                        JsonPointer.compile("/"));
+
+                List<JsonPointer> deletionPointers = allPointers.stream()
+                        .filter(pointer -> schemaPointers.stream()
+                                .noneMatch(schemaPointer -> {
+                                    if (pointer.length() <= schemaPointer.length()) {
+                                        return schemaPointer.toString().startsWith(pointer.toString());
+                                    } else {
+                                        return pointer.toString().startsWith(schemaPointer.toString());
+                                    }
+                                }))
+                        .sorted((l, r) -> Integer.compare(pointerDepth(r), pointerDepth(l)))
+                        .toList();
+
+                pointers.addAll(deletionPointers);
+            }
+        }
 
         var jsonCopy = json.deepCopy();
-
-        for (var pointer : excludePointers) {
+        for (var pointer : pointers) {
             var currentObject = (ObjectNode) jsonCopy.at(pointer.head());
             currentObject.remove(pointer.last().getMatchingProperty());
         }
@@ -51,15 +75,42 @@ public class Controller {
         return jsonCopy;
     }
 
-    private List<JsonPointer> constructExcludePointers(ObjectNode json, List<LinkedList<String>> paths) {
+    private int pointerDepth(JsonPointer pointer) {
+        return pointer.toString().split("/").length;
+    }
+
+    private List<JsonPointer> constructAllJsonPointers(JsonNode json, JsonPointer pointer) {
+        var jsonCopy = json.deepCopy();
+        var acc = new ArrayList<JsonPointer>();
+
+        if (jsonCopy.isValueNode()) {
+            return List.of(pointer);
+        } else if (jsonCopy.isObject()) {
+            for (var property : jsonCopy.properties()) {
+
+                List<JsonPointer> c =
+                        constructAllJsonPointers(property.getValue(), pointer.appendProperty(property.getKey()));
+                acc.addAll(c);
+            }
+        } else if (jsonCopy.isArray()) {
+            for (int i = 0; i < jsonCopy.size(); i++) {
+                List<JsonPointer> c = constructAllJsonPointers(jsonCopy.get(i), pointer.appendIndex(i));
+                acc.addAll(c);
+            }
+        }
+
+        return acc;
+    }
+
+    private List<JsonPointer> constructSchemaPointers(ObjectNode json, List<LinkedList<String>> paths) {
         var acc = new ArrayList<JsonPointer>();
         for (var path : paths) {
-            acc.addAll(constructExcludePointersForPath(json, JsonPointer.compile("/"), path));
+            acc.addAll(constructSchemaPointersForPath(json, JsonPointer.compile("/"), path));
         }
         return acc;
     }
 
-    private List<JsonPointer> constructExcludePointersForPath(
+    private List<JsonPointer> constructSchemaPointersForPath(
             JsonNode json,
             JsonPointer pointer,
             LinkedList<String> path) {
@@ -74,11 +125,11 @@ public class Controller {
             } else if (json.isObject()) {
                 pointer = pointer.appendProperty(subPath);
             } else if (json.isArray()) {
-                var pointerCopy = pointer.appendProperty(subPath);
 
+                var arrayPointer = pointer.appendProperty(subPath);
                 for (int i = 0; i < json.size(); i++) {
-                    var arrayPointers = constructExcludePointersForPath(json.deepCopy(),
-                            pointerCopy.appendIndex(i),
+                    var arrayPointers = constructSchemaPointersForPath(json.deepCopy(),
+                            arrayPointer.appendIndex(i),
                             (LinkedList<String>) path.clone());
                     acc.addAll(arrayPointers);
                 }

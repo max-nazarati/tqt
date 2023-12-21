@@ -12,11 +12,10 @@ Content-Type: application/json
   "kafkaTopic": "my-topic",
   "schemaRegistry": "localhost:9091",
   "schema": {
-    "type": "EXCLUDE",
+    "type": "INCLUDE",
     "schema": [
       "id",
-      "nestedObject.entries.someMap",
-      "nestedObject.entries"
+      "nestedObject.entries.id"
     ]
   }
 }

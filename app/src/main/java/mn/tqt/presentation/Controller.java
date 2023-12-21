@@ -88,14 +88,11 @@ public class Controller {
         } else if (jsonCopy.isObject()) {
             for (var property : jsonCopy.properties()) {
 
-                List<JsonPointer> c =
-                        constructAllJsonPointers(property.getValue(), pointer.appendProperty(property.getKey()));
-                acc.addAll(c);
+                acc.addAll(constructAllJsonPointers(property.getValue(), pointer.appendProperty(property.getKey())));
             }
         } else if (jsonCopy.isArray()) {
             for (int i = 0; i < jsonCopy.size(); i++) {
-                List<JsonPointer> c = constructAllJsonPointers(jsonCopy.get(i), pointer.appendIndex(i));
-                acc.addAll(c);
+                acc.addAll(constructAllJsonPointers(jsonCopy.get(i), pointer.appendIndex(i)));
             }
         }
 

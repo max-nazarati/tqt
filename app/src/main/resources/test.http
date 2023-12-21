@@ -1,0 +1,23 @@
+GET http://localhost:8080/generate-dummy-data
+Accept: application/json
+
+###
+POST http://localhost:8080
+Content-Type: application/json
+
+{
+  "startDate": "2023-12-21",
+  "endDate": "2023-12-22",
+  "kafkaEndpoint": "localhost:9094",
+  "kafkaTopic": "my-topic",
+  "schemaRegistry": "localhost:9091",
+  "schema": {
+    "type": "INCLUDE",
+    "schema": [
+      "id",
+      "nestedObject.entries.id"
+    ]
+  }
+}
+
+###

@@ -1,5 +1,11 @@
 package mn.tqt.presentation;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
 public record Query(String startDate,
                     String endDate,
                     String kafkaEndpoint,
@@ -7,23 +13,23 @@ public record Query(String startDate,
                     String schemaRegistry,
                     QuerySchema schema) {
 
-    public java.time.OffsetDateTime typedStartDate() {
+    public OffsetDateTime typedStartDate() {
         return stringToOffsetDatetime(startDate);
     }
 
-    public java.util.List<java.util.LinkedList<String>> schemaAsListOfQueues() {
+    public java.util.List<LinkedList<String>> schemaAsListOfQueues() {
         return schema.schema().stream()
-                .map(entry -> new java.util.LinkedList<>(java.util.List.of(entry.split("\\.")))).toList();
+                .map(entry -> new LinkedList<>(List.of(entry.split("\\.")))).toList();
     }
 
-    public java.time.OffsetDateTime typedEndDate() {
+    public OffsetDateTime typedEndDate() {
         return stringToOffsetDatetime(endDate);
     }
 
-    private static java.time.OffsetDateTime stringToOffsetDatetime(String dateString) {
-        var parts = new java.util.LinkedList<>(java.util.Arrays.stream(dateString.split("-")).toList());
+    private static OffsetDateTime stringToOffsetDatetime(String dateString) {
+        var parts = new LinkedList<>(Arrays.stream(dateString.split("-")).toList());
 
-        return java.time.OffsetDateTime.of(
+        return OffsetDateTime.of(
                 !parts.isEmpty() ? Integer.parseInt(parts.pop()) : 2021,
                 !parts.isEmpty() ? Integer.parseInt(parts.pop()) : 1,
                 !parts.isEmpty() ? Integer.parseInt(parts.pop()) : 1,
@@ -31,7 +37,7 @@ public record Query(String startDate,
                 !parts.isEmpty() ? Integer.parseInt(parts.pop()) : 0,
                 !parts.isEmpty() ? Integer.parseInt(parts.pop()) : 0,
                 !parts.isEmpty() ? Integer.parseInt(parts.pop()) : 0,
-                java.time.ZoneOffset.UTC);
+                ZoneOffset.UTC);
 
     }
 }

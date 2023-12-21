@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import mn.tqt.presentation.dummy.KafkaReader;
-import org.apache.commons.collections.comparators.ReverseComparator;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -16,16 +15,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 public class Controller {
 
     @PostMapping
-    public java.util.List<ObjectNode> readFromKafka(@RequestBody Query query) throws InterruptedException {
+    public List<ObjectNode> readFromKafka(@RequestBody Query query) {
         var consumer = buildConsumer(query.kafkaEndpoint(), query.kafkaTopic(), query.schemaRegistry());
 
         var reader = new KafkaReader<>(
@@ -142,7 +138,7 @@ public class Controller {
             String server,
             String topic,
             String schemaRegistry) {
-        var props = new java.util.Properties();
+        var props = new Properties();
 
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, server);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
@@ -157,15 +153,14 @@ public class Controller {
         props.put("schema.registry.url", schemaRegistry);
 
         var consumer = new KafkaConsumer<Integer, JsonNode>(props);
-        consumer.subscribe(java.util.List.of(topic));
+        consumer.subscribe(List.of(topic));
 
         return consumer;
     }
 
     @GetMapping("/generate-dummy-data")
-//    @Async
     public void setupDummyTopic() throws InterruptedException {
-        var props = new java.util.Properties();
+        var props = new Properties();
 
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9094");
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
@@ -176,9 +171,9 @@ public class Controller {
 
         var producer = new KafkaProducer<Integer, mn.tqt.presentation.dummy.DummyObject>(props);
 
-        var nestedObject = new mn.tqt.presentation.dummy.NestedObject(2, java.util.List.of(
-                new mn.tqt.presentation.dummy.Entry(1, java.util.Map.of(1, "a", 2, "b")),
-                new mn.tqt.presentation.dummy.Entry(2, java.util.Map.of(3, "c", 4, "d", 5, "e"))));
+        var nestedObject = new mn.tqt.presentation.dummy.NestedObject(2, List.of(
+                new mn.tqt.presentation.dummy.Entry(1, Map.of(1, "a", 2, "b")),
+                new mn.tqt.presentation.dummy.Entry(2, Map.of(3, "c", 4, "d", 5, "e"))));
         for (var i = 0; i < 100; i++) {
             var data = new mn.tqt.presentation.dummy.DummyObject(i, nestedObject);
             var record = new ProducerRecord<>("my-topic", data.id(), data);

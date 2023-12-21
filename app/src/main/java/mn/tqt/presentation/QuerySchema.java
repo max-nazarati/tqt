@@ -1,4 +1,6 @@
 package mn.tqt.presentation;
 
-record QuerySchema(SchemaType type, java.util.List<String> schema) {
+import java.util.List;
+
+record QuerySchema(SchemaType type, List<String> schema) {
 }

@@ -1,19 +1,23 @@
 package mn.tqt.presentation;
 
+import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import mn.tqt.presentation.dummy.KafkaReader;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,7 +33,61 @@ public class Controller {
                 query.typedStartDate().toInstant().toEpochMilli(),
                 query.typedEndDate().toInstant().toEpochMilli());
 
-        return reader.readRecords().stream().map(record -> (ObjectNode) record.value()).toList();
+        ArrayList<ConsumerRecord<Integer, JsonNode>> consumerRecords = reader.readRecords();
+        return consumerRecords.stream().map(record -> (ObjectNode) record.value())
+                .map(json -> applySchema(json, query.schemaAsListOfQueues())).toList();
+    }
+
+    private ObjectNode applySchema(ObjectNode json, List<LinkedList<String>> linkedLists) {
+        List<JsonPointer> excludePointers = constructExcludePointers(json.deepCopy(), linkedLists);
+
+        var jsonCopy = json.deepCopy();
+
+        for (var pointer : excludePointers) {
+            var currentObject = (ObjectNode) jsonCopy.at(pointer.head());
+            currentObject.remove(pointer.last().getMatchingProperty());
+        }
+
+        return jsonCopy;
+    }
+
+    private List<JsonPointer> constructExcludePointers(ObjectNode json, List<LinkedList<String>> paths) {
+        var acc = new ArrayList<JsonPointer>();
+        for (var path : paths) {
+            acc.addAll(constructExcludePointersForPath(json, JsonPointer.compile("/"), path));
+        }
+        return acc;
+    }
+
+    private List<JsonPointer> constructExcludePointersForPath(
+            JsonNode json,
+            JsonPointer pointer,
+            LinkedList<String> path) {
+        var acc = new ArrayList<JsonPointer>();
+        while (!path.isEmpty()) {
+            var subPath = path.pop();
+
+            json = json.get(subPath);
+            if (path.isEmpty()) {
+                pointer = pointer.appendProperty(subPath);
+                acc.add(pointer);
+            } else if (json.isObject()) {
+                pointer = pointer.appendProperty(subPath);
+            } else if (json.isArray()) {
+                var pointerCopy = pointer.appendProperty(subPath);
+
+                for (int i = 0; i < json.size(); i++) {
+                    var arrayPointers = constructExcludePointersForPath(json.deepCopy(),
+                            pointerCopy.appendIndex(i),
+                            (LinkedList<String>) path.clone());
+                    acc.addAll(arrayPointers);
+                }
+
+                path.clear();
+            }
+        }
+
+        return acc;
     }
 
     private KafkaConsumer<Integer, JsonNode> buildConsumer(

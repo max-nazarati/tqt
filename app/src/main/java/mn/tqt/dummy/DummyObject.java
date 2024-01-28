@@ -1,4 +1,4 @@
-package mn.tqt.presentation.dummy;
+package mn.tqt.dummy;
 
 public record DummyObject(int id, NestedObject nestedObject) {
 }

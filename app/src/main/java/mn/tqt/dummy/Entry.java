@@ -1,4 +1,4 @@
-package mn.tqt.presentation.dummy;
+package mn.tqt.dummy;
 
 import java.util.Map;
 

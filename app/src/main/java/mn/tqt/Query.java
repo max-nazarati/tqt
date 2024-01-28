@@ -1,4 +1,4 @@
-package mn.tqt.presentation;
+package mn.tqt;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;

@@ -1,15 +1,18 @@
-package mn.tqt.presentation.dummy;
+package mn.tqt;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-public class KafkaReader<K, V> {
+class KafkaReader<K, V> {
     private final KafkaConsumer<K, V> consumer;
     private final String topic;
     private final Long startInstant;
@@ -18,7 +21,7 @@ public class KafkaReader<K, V> {
     private static final Duration longTimeout = Duration.ofSeconds(2);
     private static final Duration shortTimeout = Duration.ofMillis(200);
 
-    public KafkaReader(KafkaConsumer<K, V> consumer,
+    KafkaReader(KafkaConsumer<K, V> consumer,
                        String topic, Long startInstant, Long endInstant) {
         this.consumer = consumer;
         this.topic = topic;
@@ -26,7 +29,7 @@ public class KafkaReader<K, V> {
         this.endInstant = endInstant;
     }
 
-    public java.util.ArrayList<ConsumerRecord<K, V>> readRecords() {
+    List<ConsumerRecord<K, V>> readRecords() {
 
         var acc = new ArrayList<ConsumerRecord<K, V>>();
 
@@ -37,9 +40,8 @@ public class KafkaReader<K, V> {
                 .collect(Collectors.toMap(partition -> partition,
                         x -> startInstant));
 
-        var offsetTimestampMap = consumer.offsetsForTimes(partitionTimestampMap);
-
-        consumer.unsubscribe();
+        var offsetTimestampMap = withoutNullValues(consumer.offsetsForTimes(partitionTimestampMap));
+        
         consumer.assign(offsetTimestampMap.keySet());
         for (var entry : offsetTimestampMap.entrySet()) {
             consumer.seek(entry.getKey(), entry.getValue().offset());
@@ -66,5 +68,17 @@ public class KafkaReader<K, V> {
         }
 
         return acc;
+    }
+
+    private Map<TopicPartition, OffsetAndTimestamp> withoutNullValues(Map<TopicPartition, OffsetAndTimestamp> map) {
+        var result = new HashMap<TopicPartition, OffsetAndTimestamp>();
+        
+        for (var entry : map.entrySet()) {
+            if (entry.getValue() != null) {
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+        
+        return result;
     }
 }

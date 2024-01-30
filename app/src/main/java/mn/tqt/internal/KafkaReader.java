@@ -1,5 +1,7 @@
-package mn.tqt;
+package mn.tqt.internal;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import mn.tqt.Query;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
@@ -12,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-class KafkaReader<K, V> {
+public class KafkaReader<K, V> {
     private final KafkaConsumer<K, V> consumer;
     private final String topic;
     private final Long startInstant;
@@ -21,7 +23,7 @@ class KafkaReader<K, V> {
     private static final Duration longTimeout = Duration.ofSeconds(2);
     private static final Duration shortTimeout = Duration.ofMillis(200);
 
-    KafkaReader(KafkaConsumer<K, V> consumer,
+    public KafkaReader(KafkaConsumer<K, V> consumer,
                        String topic, Long startInstant, Long endInstant) {
         this.consumer = consumer;
         this.topic = topic;
@@ -29,7 +31,7 @@ class KafkaReader<K, V> {
         this.endInstant = endInstant;
     }
 
-    List<ConsumerRecord<K, V>> readRecords() {
+    public List<ObjectNode> readRecords(Query query) {
 
         var acc = new ArrayList<ConsumerRecord<K, V>>();
 
@@ -67,7 +69,9 @@ class KafkaReader<K, V> {
             batch = consumer.poll(shortTimeout);
         }
 
-        return acc;
+        List<ObjectNode> list = acc.stream().map(record -> (ObjectNode) record.value())
+                .map(json -> NodeManipulation.applySchema(json, query)).toList();
+        return list;
     }
 
     private Map<TopicPartition, OffsetAndTimestamp> withoutNullValues(Map<TopicPartition, OffsetAndTimestamp> map) {

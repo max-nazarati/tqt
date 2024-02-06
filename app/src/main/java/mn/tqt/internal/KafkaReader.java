@@ -1,11 +1,11 @@
 package mn.tqt.internal;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import mn.tqt.Query;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.TopicPartition;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -14,33 +14,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class KafkaReader<K, V> {
-    private final KafkaConsumer<K, V> consumer;
-    private final String topic;
-    private final Long startInstant;
-    private final Long endInstant;
+@Component
+public class KafkaReader<K, V>  {
 
     private static final Duration longTimeout = Duration.ofSeconds(2);
     private static final Duration shortTimeout = Duration.ofMillis(200);
 
-    public KafkaReader(KafkaConsumer<K, V> consumer,
-                       String topic, Long startInstant, Long endInstant) {
-        this.consumer = consumer;
-        this.topic = topic;
-        this.startInstant = startInstant;
-        this.endInstant = endInstant;
-    }
-
-    public List<ObjectNode> readRecords(Query query) {
+    public List<ConsumerRecord<K, V>> readRecords(Query query, KafkaConsumer<K, V> consumer) {
 
         var acc = new ArrayList<ConsumerRecord<K, V>>();
 
-        var partitionInfos = consumer.partitionsFor(topic);
+        var partitionInfos = consumer.partitionsFor(query.kafkaTopic());
 
         var partitionTimestampMap = partitionInfos.stream()
-                .map(info -> new TopicPartition(topic, info.partition()))
+                .map(info -> new TopicPartition(query.kafkaTopic(), info.partition()))
                 .collect(Collectors.toMap(partition -> partition,
-                        x -> startInstant));
+                        x -> query.typedStartDate().toInstant().toEpochMilli()));
 
         var offsetTimestampMap = withoutNullValues(consumer.offsetsForTimes(partitionTimestampMap));
         
@@ -57,10 +46,10 @@ public class KafkaReader<K, V> {
                 break;
             }
             for (var record : batch) {
-                if (record.timestamp() < endInstant) {
+                if (record.timestamp() < query.typedEndDate().toInstant().toEpochMilli()) {
                     acc.add(record);
                 } else {
-                    var partition = new TopicPartition(topic, record.partition());
+                    var partition = new TopicPartition(query.kafkaTopic(), record.partition());
                     consumer.pause(List.of(partition));
                     pausedPartitions++;
                 }
@@ -69,9 +58,7 @@ public class KafkaReader<K, V> {
             batch = consumer.poll(shortTimeout);
         }
 
-        List<ObjectNode> list = acc.stream().map(record -> (ObjectNode) record.value())
-                .map(json -> NodeManipulation.applySchema(json, query)).toList();
-        return list;
+        return acc;
     }
 
     private Map<TopicPartition, OffsetAndTimestamp> withoutNullValues(Map<TopicPartition, OffsetAndTimestamp> map) {

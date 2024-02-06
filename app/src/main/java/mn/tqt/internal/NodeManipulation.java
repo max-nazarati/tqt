@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-final class NodeManipulation {
+public final class NodeManipulation {
 
     private NodeManipulation() {
     }
 
-    static ObjectNode applySchema(ObjectNode json, Query query) {
+    public static ObjectNode applySchema(ObjectNode json, Query query) {
 
         List<JsonPointer> pointers = switch (query.schema().type()) {
             case EXCLUDE -> constructSchemaPointers(json.deepCopy(), query.schema());

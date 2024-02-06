@@ -3,6 +3,7 @@ package mn.tqt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import mn.tqt.internal.KafkaReader;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -46,12 +47,12 @@ class ControllerTest {
 
     @Test
     void nestedFields() throws JsonProcessingException {
-        JsonNode simpleJson = objectMapper.readTree("{\"a\": {\"b\": 1}, \"c\": 2}");
+        ObjectNode simpleJson = (ObjectNode) objectMapper.readTree("{\"a\": {\"b\": 1}, \"c\": 2}");
         JsonNode expectedJson = objectMapper.readTree("{\"a\": {}, \"c\": 2}");
 
         Query query = simpleQuery(new QuerySchema(SchemaType.EXCLUDE, List.of("a.b")));
 
-        when(kafkaReader.readRecords(query, consumer)).thenReturn(List.of(new ConsumerRecord<>("dummyTopic", 0, 0, 1, simpleJson)));
+        when(kafkaReader.readRecords(query, consumer)).thenReturn(List.of(simpleJson));
 
         // ASSERTION
         var result = underTest.readFromKafka(query);
@@ -65,7 +66,7 @@ class ControllerTest {
 
         Query query = simpleQuery(new QuerySchema(SchemaType.EXCLUDE, List.of("1.c")));
 
-        when(kafkaReader.readRecords(query, consumer)).thenReturn(List.of(new ConsumerRecord<>("dummyTopic", 0, 0, 1, simpleJson)));
+        when(kafkaReader.readRecords(query, consumer)).thenReturn(List.of(simpleJson));
 
         // ASSERTION
         var result = underTest.readFromKafka(query);

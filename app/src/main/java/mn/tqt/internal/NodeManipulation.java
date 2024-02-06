@@ -15,7 +15,7 @@ public final class NodeManipulation {
     private NodeManipulation() {
     }
 
-    public static ObjectNode applySchema(ObjectNode json, Query query) {
+    public static JsonNode applySchema(JsonNode json, Query query) {
 
         List<JsonPointer> pointers = switch (query.schema().type()) {
             case EXCLUDE -> constructSchemaPointers(json.deepCopy(), query.schema());

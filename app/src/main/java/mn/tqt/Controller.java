@@ -22,13 +22,11 @@ public class Controller {
     }
 
     @PostMapping
-    public List<ObjectNode> readFromKafka(@RequestBody Query query) {
+    public List<JsonNode> readFromKafka(@RequestBody Query query) {
         var consumer = consumerFactory.buildConsumer(query.kafkaEndpoint(), query.schemaRegistry());
 
-        var records = kafkaReader.readRecords(query, consumer);
-
-        return records.stream().map(r -> (ObjectNode) r.value())
-                .map(r -> NodeManipulation.applySchema(r, query)).toList();
+        return kafkaReader.readRecords(query, consumer)
+                .stream().map(r -> NodeManipulation.applySchema(r, query)).toList();
     }
 
 }

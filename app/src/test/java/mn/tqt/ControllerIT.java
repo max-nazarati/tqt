@@ -5,40 +5,44 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import mn.tqt.internal.KafkaReader;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class ControllerTest {
+@WebMvcTest
+class ControllerIT {
 
-    @Mock
+    @MockBean
     ConsumerFactory<Integer> consumerFactory;
 
-    @Mock
+    @MockBean
     KafkaConsumer<Integer, JsonNode> consumer;
 
-    @Mock
+    @MockBean
     KafkaReader<Integer, JsonNode> kafkaReader;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    @InjectMocks
-    Controller underTest;
+    @Autowired
+    MockMvc mockMvc;
 
     @BeforeEach
     void setup() {
@@ -46,7 +50,7 @@ class ControllerTest {
     }
 
     @Test
-    void nestedFields() throws JsonProcessingException {
+    void nestedFields() throws Exception {
         ObjectNode simpleJson = (ObjectNode) objectMapper.readTree("{\"a\": {\"b\": 1}, \"c\": 2}");
         JsonNode expectedJson = objectMapper.readTree("{\"a\": {}, \"c\": 2}");
 
@@ -55,12 +59,11 @@ class ControllerTest {
         when(kafkaReader.readRecords(query, consumer)).thenReturn(List.of(simpleJson));
 
         // ASSERTION
-        var result = underTest.readFromKafka(query);
-        assertEquals(result, List.of(expectedJson));
+        doRequest(query).andExpectAll(standardAssertions(expectedJson));
     }
 
     @Test
-    void listOfObjects() throws JsonProcessingException {
+    void listOfObjects() throws Exception {
         JsonNode simpleJson = objectMapper.readTree("{\"1\": [{\"b\": 1, \"c\": 2}]}");
         JsonNode expectedJson = objectMapper.readTree("{\"1\": [{\"b\": 1}]}");
 
@@ -69,12 +72,20 @@ class ControllerTest {
         when(kafkaReader.readRecords(query, consumer)).thenReturn(List.of(simpleJson));
 
         // ASSERTION
-        var result = underTest.readFromKafka(query);
-        assertEquals(result, List.of(expectedJson));
+        doRequest(query).andExpectAll(standardAssertions(expectedJson));
     }
 
     private Query simpleQuery(QuerySchema schema) {
         return new Query("", "", "", "", "", schema);
     }
 
+    private ResultActions doRequest(Query query) throws Exception {
+        return mockMvc.perform(post("")
+                .content(objectMapper.writeValueAsString(query))
+                .contentType(MediaType.APPLICATION_JSON));
+    }
+
+    private ResultMatcher[] standardAssertions(JsonNode expectedJson) throws JsonProcessingException {
+        return new ResultMatcher[] {status().isOk(), content().json(objectMapper.writeValueAsString(List.of(expectedJson)))};
+    }
 }

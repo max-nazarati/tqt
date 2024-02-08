@@ -24,15 +24,15 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     testImplementation("org.mockito:mockito-core:5.10.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.10.0")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:3.2.2")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // This dependency is used by the application.
-    implementation("com.google.guava:guava:32.1.1-jre")
 
-    implementation("org.springframework.boot:spring-boot-starter-web:3.2.0")
+    implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
     implementation("org.apache.kafka:kafka-clients:3.6.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.0")
+//    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.0")
     implementation("io.confluent:kafka-json-schema-serializer:7.5.1")
 
 

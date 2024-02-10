@@ -40,9 +40,19 @@ public final class NodeManipulation {
         };
 
         var jsonCopy = json.deepCopy();
+        var emptyObjectPointers = new ArrayList<JsonPointer>();
         for (var pointer : pointers) {
             var currentObject = (ObjectNode) jsonCopy.at(pointer.head());
             currentObject.remove(pointer.last().getMatchingProperty());
+
+            if (currentObject.isObject() && currentObject.isEmpty()) {
+                emptyObjectPointers.add(pointer.head());
+            }
+        }
+
+        for (var emptyObjectPointer : emptyObjectPointers) {
+            var currentObject = (ObjectNode) jsonCopy.at(emptyObjectPointer.head());
+            currentObject.remove(emptyObjectPointer.last().getMatchingProperty());
         }
 
         return jsonCopy;

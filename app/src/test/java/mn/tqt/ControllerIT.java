@@ -102,8 +102,4 @@ class ControllerIT {
                 .content(objectMapper.writeValueAsString(query))
                 .contentType(MediaType.APPLICATION_JSON));
     }
-
-    private ResultMatcher[] standardAssertions(JsonNode expectedJson) throws JsonProcessingException {
-        return new ResultMatcher[] {status().isOk(), content().json(objectMapper.writeValueAsString(List.of(expectedJson)))};
-    }
 }

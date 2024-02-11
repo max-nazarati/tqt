@@ -13,7 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +37,7 @@ class ServiceTest {
         when(kafkaReader.readRecords(query)).thenReturn(records);
 
         // ASSERTION
-        assertEquals(expectedJson, underTest.readRecordsWithSchema(query));
+        assertThat(expectedJson).isEqualTo(underTest.readRecordsWithSchema(query));
     }
 
     @Test
@@ -50,7 +50,7 @@ class ServiceTest {
         when(kafkaReader.readRecords(query)).thenReturn(records);
 
         // ASSERTION
-        assertEquals(expectedJson, underTest.readRecordsWithSchema(query));
+        assertThat(expectedJson).isEqualTo(underTest.readRecordsWithSchema(query));
     }
 
     @Test
@@ -63,7 +63,7 @@ class ServiceTest {
         when(kafkaReader.readRecords(query)).thenReturn(records);
 
         // ASSERTION
-        assertEquals(expectedJson, underTest.readRecordsWithSchema(query));
+        assertThat(expectedJson).isEqualTo(underTest.readRecordsWithSchema(query));
     }
 
     private Query simpleQuery(QuerySchema schema) {

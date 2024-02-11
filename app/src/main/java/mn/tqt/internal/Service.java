@@ -10,12 +10,19 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public final class NodeManipulation {
+@org.springframework.stereotype.Service
+public class Service {
+    private final KafkaReader kafkaReader;
 
-    private NodeManipulation() {
+    public Service(KafkaReader kafkaReader) {
+        this.kafkaReader = kafkaReader;
     }
 
-    public static JsonNode applySchema(JsonNode json, Query query) {
+    public List<JsonNode> readRecordsWithSchema(Query query) {
+        return kafkaReader.readRecords(query).stream().map(x -> applySchema(x, query)).toList();
+    }
+
+    private JsonNode applySchema(JsonNode json, Query query) {
 
         List<JsonPointer> pointers = switch (query.schema().type()) {
             case EXCLUDE -> constructSchemaPointers(json.deepCopy(), query.schema());
@@ -45,7 +52,7 @@ public final class NodeManipulation {
             var currentObject = (ObjectNode) jsonCopy.at(pointer.head());
             currentObject.remove(pointer.last().getMatchingProperty());
 
-            if (currentObject.isObject() && currentObject.isEmpty()) {
+            if (currentObject.isEmpty()) {
                 emptyObjectPointers.add(pointer.head());
             }
         }
@@ -58,7 +65,7 @@ public final class NodeManipulation {
         return jsonCopy;
     }
 
-    private static int pointerDepth(JsonPointer pointer) {
+    private int pointerDepth(JsonPointer pointer) {
         return pointer.toString().split("/").length;
     }
 
@@ -66,7 +73,7 @@ public final class NodeManipulation {
     /**
      Constructs JSON pointers for all the possible paths within the {@link JsonNode}
      */
-    private static List<JsonPointer> constructAllJsonPointers(JsonNode json, JsonPointer pointer) {
+    private List<JsonPointer> constructAllJsonPointers(JsonNode json, JsonPointer pointer) {
         var jsonCopy = json.deepCopy();
         var acc = new ArrayList<JsonPointer>();
 
@@ -89,7 +96,7 @@ public final class NodeManipulation {
     /**
     Constructs JSON pointers for all the paths specified in the {@link mn.tqt.QuerySchema}
      */
-    private static List<JsonPointer> constructSchemaPointers(ObjectNode json, QuerySchema schema) {
+    private List<JsonPointer> constructSchemaPointers(ObjectNode json, QuerySchema schema) {
         var acc = new ArrayList<JsonPointer>();
         for (var path : schema.asListOfQueues()) {
             acc.addAll(constructSchemaPointersForPath(json, JsonPointer.compile("/"), path));

@@ -3,15 +3,13 @@ package mn.tqt;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.springframework.stereotype.Component;
 
 import java.util.Properties;
 import java.util.UUID;
 
-@Component
-public class ConsumerFactory<K> {
+public class ConsumerFactory {
 
-    public KafkaConsumer<K, JsonNode> buildConsumer(String kafkaServer, String schemaRegistry) {
+    public static <K> KafkaConsumer<K, JsonNode> buildConsumer(String kafkaServer, String schemaRegistry) {
         var props = new Properties();
 
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);

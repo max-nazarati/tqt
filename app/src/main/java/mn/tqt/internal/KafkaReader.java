@@ -1,6 +1,7 @@
 package mn.tqt.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import mn.tqt.ConsumerFactory;
 import mn.tqt.Query;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
@@ -15,12 +16,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-public class KafkaReader<K, V>  {
+public class KafkaReader  {
 
     private final Duration longTimeout = Duration.ofSeconds(1);
     private final Duration shortTimeout = Duration.ofMillis(200);
 
-    public List<JsonNode> readRecords(Query query, KafkaConsumer<K, V> consumer) {
+    public List<JsonNode> readRecords(Query query) {
+        KafkaConsumer<?, JsonNode> consumer = ConsumerFactory.buildConsumer(query.kafkaEndpoint(), query.schemaRegistry());
 
         var acc = new ArrayList<JsonNode>();
 
@@ -47,7 +49,7 @@ public class KafkaReader<K, V>  {
             }
             for (var record : batch) {
                 if (record.timestamp() < query.typedEndDate().toInstant().toEpochMilli()) {
-                    acc.add((JsonNode) record.value());
+                    acc.add( record.value());
                 } else {
                     var partition = new TopicPartition(query.kafkaTopic(), record.partition());
                     consumer.pause(List.of(partition));
@@ -57,6 +59,7 @@ public class KafkaReader<K, V>  {
 
             batch = consumer.poll(shortTimeout);
         }
+        consumer.close();
 
         return acc;
     }

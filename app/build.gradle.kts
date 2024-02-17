@@ -29,6 +29,7 @@ dependencies {
     testImplementation("org.mockito:mockito-junit-jupiter:5.10.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test:3.2.2")
     testImplementation("org.testcontainers:kafka:1.19.5")
+    testImplementation("org.testcontainers:junit-jupiter:1.19.5")
     testImplementation("org.assertj:assertj-core:3.25.3")
 
 

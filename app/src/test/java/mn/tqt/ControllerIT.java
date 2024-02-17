@@ -1,30 +1,22 @@
 package mn.tqt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import mn.tqt.internal.Service;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-@ExtendWith(MockitoExtension.class)
-@WebMvcTest
+@SpringBootTest
+@Testcontainers
 class ControllerIT {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockBean
-    Service service;
-
-    @Autowired
-    MockMvc mockMvc;
+    @Container
+    static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("bitnami/kafka:3.2.3"));
 
     @Test
     void test() {}
@@ -33,9 +25,4 @@ class ControllerIT {
         return new Query("", "", "", "", "", schema);
     }
 
-    private ResultActions doRequest(Query query) throws Exception {
-        return mockMvc.perform(post("")
-                .content(objectMapper.writeValueAsString(query))
-                .contentType(MediaType.APPLICATION_JSON));
-    }
 }

@@ -34,10 +34,10 @@ class ServiceTest {
 
         Query query = simpleQuery(new QuerySchema(SchemaType.EXCLUDE, List.of("a.b")));
 
-        when(kafkaReader.readRecords(query)).thenReturn(records);
+        when(kafkaReader.readJsonRecords(query)).thenReturn(records);
 
         // ASSERTION
-        assertThat(expectedJson).isEqualTo(underTest.readRecordsWithSchema(query));
+        assertThat(expectedJson).isEqualTo(underTest.readJsonRecordsWithSchema(query));
     }
 
     @Test
@@ -47,10 +47,10 @@ class ServiceTest {
 
         Query query = simpleQuery(new QuerySchema(SchemaType.INCLUDE, List.of("a.b")));
 
-        when(kafkaReader.readRecords(query)).thenReturn(records);
+        when(kafkaReader.readJsonRecords(query)).thenReturn(records);
 
         // ASSERTION
-        assertThat(expectedJson).isEqualTo(underTest.readRecordsWithSchema(query));
+        assertThat(expectedJson).isEqualTo(underTest.readJsonRecordsWithSchema(query));
     }
 
     @Test
@@ -60,10 +60,10 @@ class ServiceTest {
 
         Query query = simpleQuery(new QuerySchema(SchemaType.EXCLUDE, List.of("1.c")));
 
-        when(kafkaReader.readRecords(query)).thenReturn(records);
+        when(kafkaReader.readJsonRecords(query)).thenReturn(records);
 
         // ASSERTION
-        assertThat(expectedJson).isEqualTo(underTest.readRecordsWithSchema(query));
+        assertThat(expectedJson).isEqualTo(underTest.readJsonRecordsWithSchema(query));
     }
 
     private Query simpleQuery(QuerySchema schema) {

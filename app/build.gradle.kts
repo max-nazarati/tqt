@@ -23,6 +23,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
     implementation("org.apache.kafka:kafka-clients:3.6.1")
     implementation("io.confluent:kafka-json-schema-serializer:7.5.1")
+    implementation("io.confluent:kafka-avro-serializer:5.3.0")
+
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     testImplementation("org.mockito:mockito-core:5.10.0")

@@ -17,9 +17,14 @@ public class Controller {
         this.service = service;
     }
 
-    @PostMapping
-    public List<JsonNode> readFromKafka(@RequestBody Query query) {
-        return service.readRecordsWithSchema(query);
+    @PostMapping("/json")
+    public List<JsonNode> readJsonFromKafka(@RequestBody Query query) {
+        return service.readJsonRecordsWithSchema(query);
+    }
+
+    @PostMapping("/avro")
+    public List<JsonNode> readAvroFromKafka(@RequestBody Query query) {
+        return service.readAvroRecordsWithSchema(query);
     }
 
 }

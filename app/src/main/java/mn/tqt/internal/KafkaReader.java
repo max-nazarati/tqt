@@ -1,5 +1,6 @@
 package mn.tqt.internal;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,11 +28,11 @@ class KafkaReader  {
 
     KafkaReader(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.objectMapper.addMixIn(org.apache.avro.generic.GenericRecord.class, IgnoreAvroPropertiesMixIn.class);
     }
 
-    ArrayList<JsonNode> executeQuery(Query query, KafkaConsumer<?, JsonNode> consumer) {
-        var acc = new ArrayList<JsonNode>();
+
+    ArrayList<ObjectNode> executeQuery(Query query, KafkaConsumer<?, ?> consumer) {
+        var acc = new ArrayList<ObjectNode>();
 
         var partitionInfos = consumer.partitionsFor(query.kafkaTopic());
 
@@ -56,7 +57,11 @@ class KafkaReader  {
             }
             for (var record : batch) {
                 if (record.timestamp() < query.typedEndDate().toInstant().toEpochMilli()) {
-                    acc.add(objectMapper.convertValue(record.value(), ObjectNode.class));
+                    try {
+                        acc.add((ObjectNode) objectMapper.readTree(record.value().toString()));
+                    } catch (JsonProcessingException | ClassCastException e) {
+                        throw new RuntimeException("failed to parse record: " + record.value().toString());
+                    }
                 } else {
                     var partition = new TopicPartition(query.kafkaTopic(), record.partition());
                     consumer.pause(List.of(partition));

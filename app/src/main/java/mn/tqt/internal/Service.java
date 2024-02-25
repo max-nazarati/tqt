@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import mn.tqt.ConsumerFactory;
 import mn.tqt.Query;
 import mn.tqt.QuerySchema;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
 import java.util.ArrayList;
@@ -21,12 +22,12 @@ public class Service {
     }
 
     public List<JsonNode> readJsonRecordsWithSchema(Query query) {
-        KafkaConsumer<?, JsonNode> consumer = ConsumerFactory.buildJsonConsumer(query.kafkaEndpoint(), query.schemaRegistry());
+        KafkaConsumer<?, ObjectNode> consumer = ConsumerFactory.buildJsonConsumer(query.kafkaEndpoint(), query.schemaRegistry());
         return kafkaReader.executeQuery(query, consumer).stream().map(x -> applySchema(x, query)).toList();
     }
 
     public List<JsonNode> readAvroRecordsWithSchema(Query query) {
-        KafkaConsumer<?, JsonNode> consumer = ConsumerFactory.buildAvroConsumer(query.kafkaEndpoint(), query.schemaRegistry());
+        KafkaConsumer<?, GenericRecord> consumer = ConsumerFactory.buildAvroConsumer(query.kafkaEndpoint(), query.schemaRegistry());
         return kafkaReader.executeQuery(query, consumer).stream().map(x -> applySchema(x, query)).toList();
     }
 

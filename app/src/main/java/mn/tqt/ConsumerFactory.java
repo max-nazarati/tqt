@@ -33,7 +33,7 @@ public class ConsumerFactory {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 "org.apache.kafka.common.serialization.StringDeserializer");
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                io.confluent.kafka.serializers.KafkaJsonDeserializer.class.getName());
+                io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer.class.getName());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "10");

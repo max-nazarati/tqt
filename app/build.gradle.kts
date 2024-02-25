@@ -23,8 +23,8 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
     implementation("org.apache.kafka:kafka-clients:3.6.0")
-    implementation("io.confluent:kafka-json-schema-serializer:7.5.0")
-    implementation("io.confluent:kafka-avro-serializer:7.1.0")
+    implementation("io.confluent:kafka-json-schema-serializer:7.5.2")
+    implementation("io.confluent:kafka-avro-serializer:7.5.2")
 
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")

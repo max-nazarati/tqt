@@ -16,12 +16,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-public class KafkaReader  {
+class KafkaReader  {
 
     private final Duration longTimeout = Duration.ofSeconds(1);
     private final Duration shortTimeout = Duration.ofMillis(200);
 
-    public List<JsonNode> readRecords(Query query) {
+    List<JsonNode> readRecords(Query query) {
         KafkaConsumer<?, JsonNode> consumer = ConsumerFactory.buildConsumer(query.kafkaEndpoint(), query.schemaRegistry());
 
         var acc = new ArrayList<JsonNode>();

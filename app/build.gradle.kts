@@ -8,32 +8,38 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
+    id("org.springframework.boot") version "3.2.2"
 }
 
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    mavenLocal()
     maven {
         url = uri("https://packages.confluent.io/maven")
+    }
+    maven {
+        url = uri("https://jitpack.io")
     }
 }
 
 dependencies {
-    // Use JUnit Jupiter for testing.
+    implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
+    implementation("org.apache.kafka:kafka-clients:3.6.0")
+    implementation("io.confluent:kafka-json-schema-serializer:7.5.2")
+    implementation("io.confluent:kafka-avro-serializer:7.5.2")
+
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
+    testImplementation("org.mockito:mockito-core:5.10.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.10.0")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:3.2.2")
+    testImplementation("org.testcontainers:kafka:1.19.5")
+    testImplementation("org.testcontainers:junit-jupiter:1.19.5")
+    testImplementation("org.assertj:assertj-core:3.25.3")
+
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    // This dependency is used by the application.
-    implementation("com.google.guava:guava:32.1.1-jre")
-
-    implementation("org.springframework.boot:spring-boot-starter-web:3.2.0")
-    implementation("org.apache.kafka:kafka-clients:3.6.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.0")
-    implementation("io.confluent:kafka-json-schema-serializer:7.5.1")
-
-
-
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

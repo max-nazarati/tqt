@@ -1,4 +1,4 @@
-package mn.tqt.presentation;
+package mn.tqt;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -8,9 +8,7 @@ import java.util.List;
 
 public record Query(String startDate,
                     String endDate,
-                    String kafkaEndpoint,
                     String kafkaTopic,
-                    String schemaRegistry,
                     QuerySchema schema) {
 
     public OffsetDateTime typedStartDate() {

@@ -1,5 +1,9 @@
 version: "3.9"
 
+networks:
+  default:
+    name: test-network
+
 services:
   zookeeper:
     container_name: zookeeper
@@ -34,6 +38,9 @@ services:
       KAFKA_CFG_LOG_RETENTION_HOURS: 24
       KAFKA_CFG_LOG_RETENTION_CHECK_INTERVAL_MS: 600000
       KAFKA_CFG_SCHEMA_REGISTRY_URL: schema-registry:8081
+    expose:
+      - 9094
+      - 9092
     ports:
       - "9094:9094"
     depends_on:
@@ -53,3 +60,13 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     depends_on:
       - kafka
+  tqt:
+    depends_on:
+      - kafka
+    container_name: tqt
+    image: tqt
+    environment:
+      KAFKA_SERVER_URL: kafka:9092
+      SCHEMA_REGISTRY_URL: schema-registry:8081
+    ports:
+      - "8081:8080"
